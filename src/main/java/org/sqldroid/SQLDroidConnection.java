@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SQLDroidConnection implements Connection {
 
@@ -231,6 +233,12 @@ public class SQLDroidConnection implements Connection {
             }
             sqlitedb = null;
         } else {
+            try {
+                throw new Exception("Hanny, Gila");
+            } catch (Exception ex) {
+                Logger.getLogger(SQLDroidConnection.class.getName()).log(Level.SEVERE, "SQL Droid Connection Duplicate Close", ex);
+            }
+
             Log.e("SQLDroidConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
         }
     }
@@ -617,43 +625,42 @@ public class SQLDroidConnection implements Connection {
     }
 
     public ResultSet getReturnedColumnResultSet(String sql, String[] columnNames) throws SQLException {
-        if (generatedRowIdStatement == null) {
-            //get table name from insert statement
-            int indexInto = sql.indexOf("into") + 5;
-            String sqlPart = sql.substring(indexInto);
-            int endIndex = -1;
-            for (char ch : sqlPart.toCharArray()) {
-                if (ch == ' ' || ch == '(') {
-                    break;
-                }
-                endIndex++;
-            }
 
-            String tableName = sqlPart.substring(0, endIndex + 1);
-
-            //generate select column sql
-            StringBuilder columnSql = new StringBuilder();
-            for (String columnName : columnNames) {
-                if (columnSql.length() > 0) {
-                    columnSql.append(", ");
-                }
-                columnSql.append(columnName);
+        //get table name from insert statement
+        int indexInto = sql.indexOf("into") + 5;
+        String sqlPart = sql.substring(indexInto);
+        int endIndex = -1;
+        for (char ch : sqlPart.toCharArray()) {
+            if (ch == ' ' || ch == '(') {
+                break;
             }
-            //Get last row id
-            PreparedStatement lastRowIdStmt = prepareStatement("select last_insert_rowid();");
-            ResultSet rs = lastRowIdStmt.executeQuery();
-            long rowId = 0;
-            if (rs.next()) {
-                rowId = rs.getLong(1);
-            }
-            rs.close();
-            lastRowIdStmt.close();
-
-            //
-            generatedRowIdStatement = prepareStatement("select " + columnSql.toString() + " from " + tableName + " where rowid = " + rowId);
+            endIndex++;
         }
 
-        return generatedRowIdStatement.executeQuery();
+        String tableName = sqlPart.substring(0, endIndex + 1);
+
+        //generate select column sql
+        StringBuilder columnSql = new StringBuilder();
+        for (String columnName : columnNames) {
+            if (columnSql.length() > 0) {
+                columnSql.append(", ");
+            }
+            columnSql.append(columnName);
+        }
+        //Get last row id
+        PreparedStatement lastRowIdStmt = prepareStatement("select last_insert_rowid();");
+        ResultSet rs = lastRowIdStmt.executeQuery();
+        long rowId = 0;
+        if (rs.next()) {
+            rowId = rs.getLong(1);
+        }
+        rs.close();
+        lastRowIdStmt.close();
+
+        //
+        PreparedStatement preparedStatement = prepareStatement("select " + columnSql.toString() + " from " + tableName + " where rowid = " + rowId);
+
+        return preparedStatement.executeQuery();
     }
 
     /**
