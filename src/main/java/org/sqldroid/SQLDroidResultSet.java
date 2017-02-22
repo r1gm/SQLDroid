@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
@@ -163,14 +164,19 @@ public class SQLDroidResultSet implements ResultSet {
 
     @Override
     public BigDecimal getBigDecimal(int colID) throws SQLException {
-        final String stringValue = getString(colID);
-        if (stringValue == null) {
+        //final String stringValue = getString(colID);
+        final double doubleValue = getDouble(colID);
+        //if (stringValue == null) {
+        if (wasNull()) {
             return null;
         } else {
-            try {
-                return new BigDecimal(stringValue);
+            try {                
+                BigDecimal value = new BigDecimal(doubleValue);
+                value.setScale(4, RoundingMode.HALF_UP);
+                //return new BigDecimal(stringValue);
+                return value;                
             } catch (NumberFormatException e) {
-                throw new SQLException("Bad value for type BigDecimal : " + stringValue);
+                throw new SQLException("Bad value for type BigDecimal : " + doubleValue);
             }
         }
     }
@@ -183,7 +189,21 @@ public class SQLDroidResultSet implements ResultSet {
     @Override
     public BigDecimal getBigDecimal(int colID, int scale)
             throws SQLException {
-        throw new SQLFeatureNotSupportedException("getBigDecimal is not supported");
+        //throw new SQLFeatureNotSupportedException("getBigDecimal is not supported");
+        final double doubleValue = getDouble(colID);
+        //if (stringValue == null) {
+        if (wasNull()) {
+            return null;
+        } else {
+            try {                
+                BigDecimal value = new BigDecimal(doubleValue);
+                value.setScale(scale, RoundingMode.HALF_UP);
+                //return new BigDecimal(stringValue);
+                return value;                
+            } catch (NumberFormatException e) {
+                throw new SQLException("Bad value for type BigDecimal : " + doubleValue);
+            }
+        }
     }
 
     @Override

@@ -47,6 +47,11 @@ public class SQLDroidConnection implements Connection {
     private SQLiteDatabase sqlitedb;
 
     private boolean autoCommit = true;
+    /**
+     * Workaround 
+     * Not used yet, still don't know the best way to pass this value to resultset
+     */
+    private int bigDecimalPrecission; 
 
     /**
      * Will have the value 9 or greater the version of SQLException has the
@@ -80,7 +85,7 @@ public class SQLDroidConnection implements Connection {
      * @param info Properties object with options. Supported options are
      * "timeout", "retry", and "shared".
      */
-    public SQLDroidConnection(String url, Properties info) throws SQLException {
+    public SQLDroidConnection(String url, Properties info) throws SQLException {        
         Log.v("SQLDroidConnection: " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this);
         Log.v("New sqlite jdbc from url '" + url + "', " + "'" + info + "'");
 
@@ -96,7 +101,8 @@ public class SQLDroidConnection implements Connection {
             // so it has to be assumed that the URL is valid when passed to this method.
             dbQname = url.substring(SQLDroidDriver.sqldroidPrefix.length());
         }
-        long timeout = 0;  // default to no retries to be consistent with other JDBC implemenations.
+        bigDecimalPrecission = 4;
+        long timeout = 0;  // default to no retries to be consistent with other JDBC implemenations.        
         long retryInterval = 50; // this was 1000 in the original code.  1 second is too long for each loop.
         int queryPart = dbQname.indexOf('?');
 
@@ -120,6 +126,8 @@ public class SQLDroidConnection implements Connection {
                     } else if (optionName.equals("retry")) {
                         timeout = optionValue;
                         retryInterval = optionValue;
+                    } else if (optionName.equals("bigDecimalPrecission")) {
+                        bigDecimalPrecission = (int) optionValue;
                     }
                     Log.v("Timeout: " + timeout);
                 } catch (NumberFormatException nfe) {
