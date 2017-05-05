@@ -241,11 +241,11 @@ public class SQLDroidConnection implements Connection {
             }
             sqlitedb = null;
         } else {
-            try {
+            /*try {
                 throw new Exception("Hanny, Gila");
             } catch (Exception ex) {
                 Logger.getLogger(SQLDroidConnection.class.getName()).log(Level.SEVERE, "SQL Droid Connection Duplicate Close", ex);
-            }
+            }*/
 
             Log.e("SQLDroidConnection.close(): " + Thread.currentThread().getId() + " \"" + Thread.currentThread().getName() + "\" " + this + " Duplicate close!");
         }
